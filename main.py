@@ -6,7 +6,7 @@ import numpy as np
 from mteb import MTEB
 import mteb
 
-def specialProcess(input_csv='EmbeddingStore.csv', output_csv='EmbeddingValuesMap.csv', k = 0.2):
+def specialProcess(input_csv='EmbeddingStore.csv', output_csv='EmbeddingValuesMap.csv', k = 0.2, approach = 1):
     """
     Processes the first 50 embeddings and creates a mapping file.
 
@@ -17,8 +17,11 @@ def specialProcess(input_csv='EmbeddingStore.csv', output_csv='EmbeddingValuesMa
     # Read the embeddings from EmbeddingStore.csv
     df = pd.read_csv(input_csv)
     
-    # Grab the indexes of the standard deviations closest to 0
     std_per_column = df.std()
+    if (approach==2):
+        std_per_column = (std_per_column-std_per_column.mean)/std_per_column.std()
+
+    # Grab the indexes of the standard deviations closest to 0
     indexed_arr = [(num, idx) for idx, num in enumerate(np.array(std_per_column))]
     sorted_by_abs = sorted(indexed_arr, key=lambda x: abs(x[0]))
 
