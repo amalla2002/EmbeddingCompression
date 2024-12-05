@@ -5,8 +5,9 @@ from sentence_transformers import SentenceTransformer
 import numpy as np
 from mteb import MTEB
 import mteb
+from mteb.tasks import AmazonReviewsClassification, Banking77Classification, ImdbClassification, STSBenchmarkSTS, SickrSTS
 
-def specialProcess(input_csv='EmbeddingStore.csv', output_csv='EmbeddingValuesMap.csv', k = 0.2, approach = 1):
+def specialProcess(input_csv='EmbeddingStore.csv', output_csv='EmbeddingValuesMap.csv', k = 0.5, approach = 2):
     """
     Processes the first 50 embeddings and creates a mapping file.
 
@@ -19,7 +20,7 @@ def specialProcess(input_csv='EmbeddingStore.csv', output_csv='EmbeddingValuesMa
     
     std_per_column = df.std()
     if (approach==2):
-        std_per_column = (std_per_column-std_per_column.mean)/std_per_column.std()
+        std_per_column = (std_per_column-std_per_column.mean())/std_per_column.std()
 
     # Grab the indexes of the standard deviations closest to 0
     indexed_arr = [(num, idx) for idx, num in enumerate(np.array(std_per_column))]
@@ -185,13 +186,13 @@ model_names = [
     "thenlper/gte-large",
     "all-mpnet-base-v2",
 ]
-tasks = [
-    "Banking77Classification",      # Classification
-    "STSBenchmark",                 # STS
-    # "MSMARCO",                      # Retrieval
-    # "TwentyNewsgroupsClustering"    # Classification & Clustering 
+tasks=[
+    AmazonReviewsClassification(hf_subsets=["en"]),
+    Banking77Classification(hf_subsets=["en"]),
+    ImdbClassification(hf_subsets=["en"]),
+    SickrSTS(hf_subsets=["en"]),
+    STSBenchmarkSTS(hf_subsets=["en"])
 ]
-k = 0.4
 times = []
 for model in model_names:
     for task in tasks:
@@ -205,15 +206,8 @@ for model in model_names:
             embedding_values_map_file=f"Data/{model}_{task}_EmbeddingValuesMap.csv",
             special_process_function=specialProcess
         )
-        normal_model = SentenceTransformer(model)
+        # normal_model = SentenceTransformer(model)
         
         # Run the evaluation
-        start_time = time.time()
-        resultsCustom = benchmark.run(custom_model, output_folder=f"Result/Custom/{model}")
-        resultsNormal = benchmark.run(normal_model, output_folder=f"Result/Normal/{model}")
-        end_time = time.time()
-        elapsed_time = end_time - start_time
-        times.append(f"{elapsed_time:.6f}_{model}_{task}\n")
-
-with open("Result/timing_results.txt", "w") as file:
-    file.writelines(times)
+        resultsCustom = benchmark.run(custom_model, output_folder=f"Result/Custom_2/{model}_k_05")
+        # resultsNormal = benchmark.run(normal_model, output_folder=f"Result/Normal/{model}")
